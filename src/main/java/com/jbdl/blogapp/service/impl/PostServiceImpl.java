@@ -6,6 +6,7 @@ import com.jbdl.blogapp.payload.PostDto;
 import com.jbdl.blogapp.payload.PostResponse;
 import com.jbdl.blogapp.repository.PostRepository;
 import com.jbdl.blogapp.service.PostService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +22,11 @@ public class PostServiceImpl implements PostService {
 
 
     private PostRepository postRepository;
+    private ModelMapper modelMapper;
 
     @Autowired // Not needed because we have only one member in this class
-    public PostServiceImpl(PostRepository postRepository) {
+    public PostServiceImpl(PostRepository postRepository, ModelMapper modelMapper) {
+        this.modelMapper = modelMapper;
         this.postRepository = postRepository;
     }
 
@@ -109,23 +112,20 @@ public class PostServiceImpl implements PostService {
     // Converts our entity to DTO
     private PostDto mapToDto(Post post) {
 
+        /*
         PostDto postDto = new PostDto();
         postDto.setId(post.getId());
         postDto.setTitle(post.getTitle());
         postDto.setContent(post.getContent());
         postDto.setDescription(post.getDescription());
+         */
 
+        PostDto postDto = modelMapper.map(post, PostDto.class);
         return postDto;
     }
 
     private Post mapToEntity(PostDto postDto) {
-
-        Post post = new Post();
-        post.setId(postDto.getId());
-        post.setTitle(postDto.getTitle());
-        post.setContent(postDto.getContent());
-        post.setDescription(postDto.getDescription());
-
+        Post post = modelMapper.map(postDto, Post.class);
         return post;
     }
 }
