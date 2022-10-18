@@ -3,10 +3,12 @@ package com.jbdl.blogapp.controller;
 
 import com.jbdl.blogapp.entity.Role;
 import com.jbdl.blogapp.entity.User;
+import com.jbdl.blogapp.payload.JwtAuthResponseDto;
 import com.jbdl.blogapp.payload.LoginDto;
 import com.jbdl.blogapp.payload.SignUpDto;
 import com.jbdl.blogapp.repository.RoleRepository;
 import com.jbdl.blogapp.repository.UserRepository;
+import com.jbdl.blogapp.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +40,17 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @PostMapping("/signin")
-    public ResponseEntity<String> authenticate(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<JwtAuthResponseDto> authenticate(@RequestBody LoginDto loginDto) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("Signed in successfully", HttpStatus.OK);
+
+        // Get token from tokenProvider class
+        String token = jwtTokenProvider.generateToken(authentication);
+        return ResponseEntity.ok(new JwtAuthResponseDto(token));
     }
 
     @PostMapping("/signup")
@@ -60,7 +68,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
         user.setUsername(signUpDto.getUsername());
 
-        Role roles = roleRepository.findByName("ROLE_ADMIN").get();
+        Role roles = roleRepository.findByName("ADMIN").get();
         user.setRoles(Collections.singleton(roles));
 
         userRepository.save(user);
